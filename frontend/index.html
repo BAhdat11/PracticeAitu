@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Esports Federation KZ — Tournament Registration</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090f;--bg2:#0e1020;--bg3:#131728;--border:#1e2a50;
+  --accent:#4361ee;--accent2:#7209b7;--green:#06d6a0;
+  --red:#ef233c;--yellow:#ffd60a;--text:#dde4f8;--muted:#5a6a9a;
+}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* AUTH OVERLAY */
+#auth-overlay{
+  position:fixed;inset:0;background:rgba(8,9,15,.97);
+  display:flex;align-items:center;justify-content:center;z-index:1000;
+}
+#auth-overlay.hidden{display:none}
+.auth-box{
+  background:var(--bg3);border:1px solid var(--border);border-radius:16px;
+  padding:36px;width:100%;max-width:420px;
+}
+.auth-box h2{font-size:1.3rem;font-weight:800;margin-bottom:6px;color:#fff}
+.auth-box p{font-size:.8rem;color:var(--muted);margin-bottom:24px}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border)}
+.auth-tab{
+  flex:1;padding:10px;text-align:center;font-weight:700;font-size:.85rem;
+  border:none;background:none;color:var(--muted);cursor:pointer;
+  border-bottom:3px solid transparent;transition:.2s;
+}
+.auth-tab.active{color:#fff;border-bottom-color:var(--accent)}
+.auth-form{display:none}.auth-form.active{display:block}
+.auth-error{color:var(--red);font-size:.78rem;margin-bottom:12px;display:none}
+.auth-error.show{display:block}
+
+/* HEADER */
+header{
+  background:linear-gradient(135deg,#0d1235,#1a0a3d);
+  border-bottom:2px solid var(--accent);
+  padding:14px 32px;
+  display:flex;align-items:center;gap:16px;
+  box-shadow:0 2px 30px rgba(67,97,238,.4);
+  position:sticky;top:0;z-index:100;
+}
+.logo{font-size:2rem}
+header h1{font-size:1.2rem;font-weight:800;color:#fff}
+header p{font-size:.75rem;color:#7b8fd4}
+.hright{margin-left:auto;display:flex;align-items:center;gap:12px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.dot.off{background:var(--red);box-shadow:0 0 8px var(--red)}
+#conn-lbl{font-size:.75rem;color:var(--muted)}
+.user-info{display:flex;align-items:center;gap:10px}
+.user-badge{
+  background:rgba(67,97,238,.2);border:1px solid var(--accent);
+  border-radius:20px;padding:4px 14px;font-size:.78rem;font-weight:700;
+}
+.admin-badge{
+  background:rgba(114,9,183,.2);border:1px solid var(--accent2);
+  border-radius:20px;padding:4px 10px;font-size:.7rem;font-weight:700;color:#c77dff;
+}
+.btn-logout{
+  border:1px solid var(--border);background:none;color:var(--muted);
+  border-radius:8px;padding:5px 12px;font-size:.75rem;cursor:pointer;transition:.2s;
+}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* NAV TABS */
+.tabs{
+  display:flex;gap:0;background:var(--bg2);
+  border-bottom:1px solid var(--border);padding:0 32px;
+}
+.tab{
+  padding:13px 22px;font-size:.87rem;font-weight:600;
+  border:none;background:none;color:var(--muted);
+  cursor:pointer;border-bottom:3px solid transparent;
+  transition:color .2s,border-color .2s;
+}
+.tab:hover{color:var(--text)}
+.tab.active{color:#fff;border-bottom-color:var(--accent)}
+.tab.admin-tab{display:none}
+.tab.admin-tab.show{display:block}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:28px 20px}
+.page{display:none}.page.active{display:block}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  padding:18px;text-align:center;transition:transform .2s;
+}
+.stat:hover{transform:translateY(-2px)}
+.stat .n{font-size:2.2rem;font-weight:800;color:var(--accent)}
+.stat .l{font-size:.74rem;color:var(--muted);margin-top:4px}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:14px;
+  padding:18px;transition:transform .2s,border-color .2s;
+}
+.card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.game-ico{font-size:1.6rem}
+.card h3{font-size:1rem;font-weight:700}
+.card-meta{font-size:.76rem;color:var(--muted);display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.card-meta span{display:flex;align-items:center;gap:6px}
+.badge{display:inline-block;border-radius:20px;padding:3px 10px;font-size:.68rem;font-weight:700;}
+.open{background:rgba(6,214,160,.15);color:var(--green)}
+.closed{background:rgba(239,35,60,.15);color:var(--red)}
+.finished{background:rgba(255,214,10,.15);color:var(--yellow)}
+.progress-bar{height:6px;background:var(--bg2);border-radius:3px;margin-bottom:12px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .4s}
+.progress-lbl{font-size:.72rem;color:var(--muted);margin-bottom:10px}
+
+.btn{border:none;border-radius:8px;padding:9px 18px;font-size:.84rem;font-weight:700;cursor:pointer;transition:background .2s;}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#5271f5}
+.btn-danger{background:rgba(239,35,60,.15);color:var(--red);border:1px solid var(--red)}
+.btn-danger:hover{background:rgba(239,35,60,.3)}
+.btn-sm{padding:6px 14px;font-size:.78rem}
+
+/* FORM */
+.form-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:26px;max-width:560px;}
+.form-card h2{font-size:1.05rem;font-weight:700;margin-bottom:20px;color:#c5d4ff}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.form-group label{font-size:.78rem;color:var(--muted)}
+.form-group input,.form-group select{
+  background:var(--bg);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:9px 12px;font-size:.87rem;outline:none;transition:border-color .2s;
+}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+.form-group select option{background:var(--bg2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead tr{background:var(--bg3);border-bottom:2px solid var(--border)}
+th{padding:12px 14px;text-align:left;color:var(--muted);font-weight:600;font-size:.76rem;text-transform:uppercase}
+td{padding:11px 14px;border-bottom:1px solid var(--border)}
+tr:hover td{background:rgba(67,97,238,.06)}
+.src-web{color:#7b9dff;font-size:.72rem}
+.src-tg{color:var(--green);font-size:.72rem}
+
+/* SECTION HEADER */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sec-head h2{font-size:1rem;font-weight:700;color:#c5d4ff}
+
+/* LOCKED PAGE */
+.locked-msg{
+  text-align:center;padding:60px 20px;
+}
+.locked-msg .icon{font-size:3rem;margin-bottom:16px}
+.locked-msg h3{font-size:1.1rem;margin-bottom:8px;color:#c5d4ff}
+.locked-msg p{color:var(--muted);font-size:.85rem;margin-bottom:20px}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:22px;right:22px;
+  background:var(--bg3);border:1px solid var(--accent);border-radius:10px;
+  padding:12px 20px;font-size:.83rem;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .3s,transform .3s;pointer-events:none;z-index:999;
+}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.err{border-color:var(--red);color:#ff8a95}
+
+.empty{text-align:center;padding:40px;color:var(--border);font-size:.85rem}
+footer{text-align:center;padding:22px;color:#232d50;font-size:.76rem;border-top:1px solid var(--bg3);margin-top:36px}
+</style>
+</head>
+<body>
+
+<!-- ── AUTH OVERLAY ── -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <h2>🎮 Esports Federation KZ</h2>
+    <p>Sign in to access the tournament system</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- Login -->
+    <div class="auth-form active" id="form-login">
+      <div id="login-error" class="auth-error"></div>
+      <div class="form-group"><label>Email</label>
+        <input id="l-email" type="email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group"><label>Password</label>
+        <input id="l-password" type="password" placeholder="••••••"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="doLogin()">Sign In →</button>
+    </div>
+
+    <!-- Register -->
+    <div class="auth-form" id="form-register">
+      <div id="reg-error" class="auth-error"></div>
+      <div class="form-group"><label>Username</label>
+        <input id="reg-username" placeholder="e.g. dragon_kz"/>
+      </div>
+      <div class="form-group"><label>Email</label>
+        <input id="reg-email" type="email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group"><label>Password (min 6 characters)</label>
+        <input id="reg-password" type="password" placeholder="••••••"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="doRegister()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">🎮</div>
+  <div>
+    <h1>Esports Federation of Kazakhstan</h1>
+    <p>Tournament Registration System</p>
+  </div>
+  <div class="hright">
+    <div class="dot" id="dot"></div>
+    <span id="conn-lbl">Connecting…</span>
+    <div class="user-info" id="user-info" style="display:none">
+      <span class="user-badge" id="user-badge">👤 User</span>
+      <span class="admin-badge" id="admin-badge" style="display:none">⚙️ Admin</span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
+  <button class="tab" onclick="showPage('tournaments')">🏆 Tournaments</button>
+  <button class="tab" onclick="showPage('register')">📝 Register Team</button>
+  <button class="tab" onclick="showPage('teams')">👥 All Teams</button>
+  <button class="tab admin-tab" id="admin-tab" onclick="showPage('admin')">⚙️ Admin</button>
+</div>
+
+<div class="main">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats">
+      <div class="stat"><div class="n" id="s-tours">—</div><div class="l">Tournaments</div></div>
+      <div class="stat"><div class="n" id="s-open">—</div><div class="l">Open</div></div>
+      <div class="stat"><div class="n" id="s-teams">—</div><div class="l">Teams Registered</div></div>
+      <div class="stat"><div class="n" id="s-games">—</div><div class="l">Disciplines</div></div>
+    </div>
+    <div class="sec-head"><h2>🔥 Open Tournaments</h2></div>
+    <div class="cards" id="dash-cards"><div class="empty">Loading…</div></div>
+  </div>
+
+  <!-- ── TOURNAMENTS ── -->
+  <div class="page" id="page-tournaments">
+    <div class="sec-head"><h2>🏆 All Tournaments</h2></div>
+    <div class="cards" id="tour-cards"><div class="empty">Loading…</div></div>
+  </div>
+
+  <!-- ── REGISTER ── -->
+  <div class="page" id="page-register">
+    <div id="register-locked" class="locked-msg" style="display:none">
+      <div class="icon">🔒</div>
+      <h3>Sign in to Register a Team</h3>
+      <p>You need an account to register your team for tournaments.</p>
+      <button class="btn btn-primary" onclick="showAuthOverlay()">Sign In / Register</button>
+    </div>
+    <div class="form-card" id="register-form">
+      <h2>📝 Register Your Team</h2>
+      <div class="form-group"><label>Tournament *</label>
+        <select id="r-tournament"><option value="">— Select tournament —</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Team Name *</label>
+          <input id="r-team" placeholder="e.g. Dragon Force KZ"/></div>
+        <div class="form-group"><label>Captain Full Name *</label>
+          <input id="r-captain" placeholder="e.g. Alibek Nurmagambetov"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Contact (Telegram / Phone) *</label>
+          <input id="r-contact" placeholder="@username or +7..."/></div>
+        <div class="form-group"><label>Number of Players</label>
+          <input id="r-players" type="number" min="1" max="10" value="5"/></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="submitRegistration()">
+        ✅ Register Team
+      </button>
+    </div>
+  </div>
+
+  <!-- ── TEAMS ── -->
+  <div class="page" id="page-teams">
+    <div class="sec-head">
+      <h2>👥 Registered Teams</h2>
+      <select id="filter-tour" onchange="loadTeams()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 12px;font-size:.83rem">
+        <option value="">All Tournaments</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Team</th><th>Captain</th><th>Contact</th>
+          <th>Game</th><th>Players</th><th>Tournament</th><th>Source</th><th id="th-action"></th>
+        </tr></thead>
+        <tbody id="teams-tbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── ADMIN ── -->
+  <div class="page" id="page-admin">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" id="admin-grid">
+      <div class="form-card">
+        <h2>➕ Add Tournament</h2>
+        <div class="form-group"><label>Tournament Name *</label>
+          <input id="a-name" placeholder="e.g. Kazakhstan CS2 Open 2026"/></div>
+        <div class="form-group"><label>Game *</label>
+          <select id="a-game">
+            <option>CS2</option><option>Dota 2</option><option>Valorant</option>
+            <option>Mobile Legends</option><option>FIFA</option>
+          </select></div>
+        <div class="form-row">
+          <div class="form-group"><label>Date *</label>
+            <input id="a-date" placeholder="e.g. 2026-08-15"/></div>
+          <div class="form-group"><label>Prize Pool</label>
+            <input id="a-prize" placeholder="e.g. $5,000"/></div>
+        </div>
+        <div class="form-group"><label>Max Teams</label>
+          <input id="a-max" type="number" value="16"/></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="addTournament()">
+          Create Tournament
+        </button>
+      </div>
+      <div class="form-card">
+        <h2>🗑️ Manage Tournaments</h2>
+        <div id="admin-tour-list"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+<footer>Developed by Bagdat Ayagan · SE-2407 · AITU · Industrial Practice 2026 · Esports Federation of Kazakhstan</footer>
+
+<script>
+const API = 'http://localhost:3000/api';
+const GAME_ICONS = { 'CS2':'🔫','Dota 2':'🧙','Valorant':'🎯','Mobile Legends':'📱','FIFA':'⚽' };
+
+// ── Auth state ─────────────────────────────────
+let currentUser = null;
+
+function getToken() { return localStorage.getItem('esports_token'); }
+function setToken(t) { localStorage.setItem('esports_token', t); }
+function clearToken() { localStorage.removeItem('esports_token'); }
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+}
+
+// ── Auth overlay ───────────────────────────────
+function showAuthOverlay() {
+  document.getElementById('auth-overlay').classList.remove('hidden');
+}
+function hideAuthOverlay() {
+  document.getElementById('auth-overlay').classList.add('hidden');
+}
+
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => {
+    t.classList.toggle('active', (tab==='login' && i===0) || (tab==='register' && i===1));
+  });
+  document.getElementById('form-login').classList.toggle('active', tab==='login');
+  document.getElementById('form-register').classList.toggle('active', tab==='register');
+  document.getElementById('login-error').classList.remove('show');
+  document.getElementById('reg-error').classList.remove('show');
+}
+
+// ── Login ──────────────────────────────────────
+async function doLogin() {
+  const email    = document.getElementById('l-email').value.trim();
+  const password = document.getElementById('l-password').value;
+  const errEl    = document.getElementById('login-error');
+  try {
+    const res  = await fetch(API + '/auth/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
+    setToken(data.token);
+    currentUser = data.user;
+    hideAuthOverlay();
+    updateUserUI();
+    toast('👋 Welcome, ' + currentUser.username + '!');
+    loadDashboard();
+  } catch { errEl.textContent = 'Connection error'; errEl.classList.add('show'); }
+}
+
+// ── Register ───────────────────────────────────
+async function doRegister() {
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const errEl    = document.getElementById('reg-error');
+  try {
+    const res  = await fetch(API + '/auth/register', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username, email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
+    setToken(data.token);
+    currentUser = data.user;
+    hideAuthOverlay();
+    updateUserUI();
+    toast('🎉 Account created! Welcome, ' + currentUser.username + '!');
+    loadDashboard();
+  } catch { errEl.textContent = 'Connection error'; errEl.classList.add('show'); }
+}
+
+// ── Logout ─────────────────────────────────────
+function doLogout() {
+  clearToken(); currentUser = null;
+  updateUserUI();
+  showAuthOverlay();
+}
+
+// ── Update UI based on user ────────────────────
+function updateUserUI() {
+  const isLoggedIn = !!currentUser;
+  const isAdmin    = currentUser?.role === 'admin';
+
+  document.getElementById('user-info').style.display = isLoggedIn ? 'flex' : 'none';
+  if (isLoggedIn) {
+    document.getElementById('user-badge').textContent = '👤 ' + currentUser.username;
+    document.getElementById('admin-badge').style.display = isAdmin ? 'inline-block' : 'none';
+  }
+
+  // Show/hide admin tab
+  document.getElementById('admin-tab').classList.toggle('show', isAdmin);
+
+  // Register page: show form or lock message
+  document.getElementById('register-form').style.display   = isLoggedIn ? 'block' : 'none';
+  document.getElementById('register-locked').style.display = isLoggedIn ? 'none'  : 'block';
+
+  // Teams table: show delete button only for admins
+  document.getElementById('th-action').textContent = isAdmin ? 'Action' : '';
+}
+
+// ── Check existing token on load ──────────────
+async function checkExistingToken() {
+  const token = getToken();
+  if (!token) { showAuthOverlay(); return; }
+  try {
+    const res = await fetch(API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (res.ok) {
+      currentUser = await res.json();
+      hideAuthOverlay();
+      updateUserUI();
+    } else {
+      clearToken(); showAuthOverlay();
+    }
+  } catch { showAuthOverlay(); }
+}
+
+// ── Tab navigation ─────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'dashboard')   loadDashboard();
+  if (id === 'tournaments') loadTournamentCards();
+  if (id === 'register')    loadRegisterSelect();
+  if (id === 'teams')       { loadFilterSelect(); loadTeams(); }
+  if (id === 'admin')       loadAdminList();
+}
+
+// ── Toast ──────────────────────────────────────
+function toast(msg, err = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show' + (err ? ' err' : '');
+  clearTimeout(el._t); el._t = setTimeout(() => el.className = '', 3200);
+}
+
+// ── Connection ─────────────────────────────────
+async function checkConn() {
+  try {
+    const r = await fetch(API + '/health');
+    if (r.ok) {
+      document.getElementById('dot').className = 'dot';
+      document.getElementById('conn-lbl').textContent = 'Server online';
+    } else throw 0;
+  } catch {
+    document.getElementById('dot').className = 'dot off';
+    document.getElementById('conn-lbl').textContent = 'Server offline';
+  }
+}
+
+// ── Dashboard ──────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [stats, tours] = await Promise.all([
+      fetch(API + '/tournaments/stats/summary').then(r => r.json()),
+      fetch(API + '/tournaments').then(r => r.json()),
+    ]);
+    document.getElementById('s-tours').textContent = stats.tournaments ?? '—';
+    document.getElementById('s-open').textContent  = stats.open ?? '—';
+    document.getElementById('s-teams').textContent = stats.teams ?? '—';
+    document.getElementById('s-games').textContent = (stats.byGame ?? []).length || '—';
+    const open = tours.filter(t => t.status === 'open');
+    const el = document.getElementById('dash-cards');
+    if (!open.length) { el.innerHTML = '<div class="empty">No open tournaments</div>'; return; }
+    el.innerHTML = open.map(t => tourCard(t, true)).join('');
+  } catch { document.getElementById('dash-cards').innerHTML = '<div class="empty">⚠️ Cannot load data</div>'; }
+}
+
+// ── Tournament cards ───────────────────────────
+async function loadTournamentCards() {
+  const el = document.getElementById('tour-cards');
+  try {
+    const tours = await fetch(API + '/tournaments').then(r => r.json());
+    el.innerHTML = tours.length ? tours.map(t => tourCard(t)).join('') : '<div class="empty">No tournaments</div>';
+  } catch { el.innerHTML = '<div class="empty">⚠️ Cannot load</div>'; }
+}
+
+function tourCard(t, registerBtn = false) {
+  const pct = Math.round(((t.registeredTeams ?? 0) / (t.maxTeams || 16)) * 100);
+  return `<div class="card">
+    <div class="card-head">
+      <span class="game-ico">${GAME_ICONS[t.game] || '🎮'}</span>
+      <div><h3>${t.name}</h3><span class="badge ${t.status}">${t.status.toUpperCase()}</span></div>
+    </div>
+    <div class="card-meta">
+      <span>🎮 ${t.game}</span><span>📅 ${t.date}</span><span>💰 ${t.prizePool || 'TBD'}</span>
+    </div>
+    <div class="progress-lbl">Teams: ${t.registeredTeams ?? '?'} / ${t.maxTeams || 16}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pct,100)}%"></div></div>
+    ${registerBtn && t.status === 'open'
+      ? `<button class="btn btn-primary btn-sm" onclick="goRegister('${t._id}')">Register Team →</button>`
+      : ''}
+  </div>`;
+}
+
+function goRegister(id) {
+  if (!currentUser) { showAuthOverlay(); return; }
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')[2].classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-register').classList.add('active');
+  loadRegisterSelect(id);
+}
+
+// ── Register select ────────────────────────────
+async function loadRegisterSelect(preselect = null) {
+  const sel = document.getElementById('r-tournament');
+  try {
+    const tours = await fetch(API + '/tournaments').then(r => r.json());
+    const open  = tours.filter(t => t.status === 'open');
+    sel.innerHTML = '<option value="">— Select tournament —</option>' +
+      open.map(t => `<option value="${t._id}" ${preselect === t._id ? 'selected' : ''}>${t.name} (${t.game})</option>`).join('');
+  } catch { sel.innerHTML = '<option value="">Error loading</option>'; }
+}
+
+// ── Submit registration ────────────────────────
+async function submitRegistration() {
+  if (!currentUser) { showAuthOverlay(); return; }
+  const tournamentId = document.getElementById('r-tournament').value;
+  const teamName     = document.getElementById('r-team').value.trim();
+  const captainName  = document.getElementById('r-captain').value.trim();
+  const contact      = document.getElementById('r-contact').value.trim();
+  const players      = parseInt(document.getElementById('r-players').value) || 5;
+  if (!tournamentId || !teamName || !captainName || !contact) {
+    toast('Please fill all required fields', true); return;
+  }
+  const tours = await fetch(API + '/tournaments').then(r => r.json());
+  const tour  = tours.find(t => t._id === tournamentId);
+  if (!tour) { toast('Tournament not found', true); return; }
+  try {
+    const res = await fetch(API + '/teams', {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ teamName, captainName, contact, game: tour.game, players, tournament: tournamentId, source: 'web' })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+    toast('🎉 Team registered successfully!');
+    document.getElementById('r-team').value = '';
+    document.getElementById('r-captain').value = '';
+    document.getElementById('r-contact').value = '';
+    document.getElementById('r-players').value = 5;
+  } catch (e) { toast(e.message || 'Registration failed', true); }
+}
+
+// ── Teams table ────────────────────────────────
+async function loadFilterSelect() {
+  const sel = document.getElementById('filter-tour');
+  try {
+    const tours = await fetch(API + '/tournaments').then(r => r.json());
+    sel.innerHTML = '<option value="">All Tournaments</option>' +
+      tours.map(t => `<option value="${t._id}">${t.name}</option>`).join('');
+  } catch {}
+}
+
+async function loadTeams() {
+  const tbody = document.getElementById('teams-tbody');
+  const filt  = document.getElementById('filter-tour').value;
+  const url   = API + '/teams' + (filt ? '?tournament=' + filt : '');
+  const isAdmin = currentUser?.role === 'admin';
+  try {
+    const teams = await fetch(url).then(r => r.json());
+    if (!teams.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty">No teams registered</td></tr>'; return; }
+    tbody.innerHTML = teams.map((t, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${t.teamName}</strong></td>
+        <td>${t.captainName}</td>
+        <td>${t.contact}</td>
+        <td>${GAME_ICONS[t.game] || ''} ${t.game}</td>
+        <td>${t.players}</td>
+        <td>${t.tournament?.name || '—'}</td>
+        <td><span class="src-${t.source}">${t.source === 'telegram' ? '🤖 Telegram' : '🌐 Web'}</span></td>
+        <td>${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deleteTeam('${t._id}')">Remove</button>` : ''}</td>
+      </tr>`).join('');
+  } catch { tbody.innerHTML = '<tr><td colspan="9" class="empty">⚠️ Cannot load teams</td></tr>'; }
+}
+
+async function deleteTeam(id) {
+  if (!confirm('Remove this team?')) return;
+  await fetch(API + '/teams/' + id, { method: 'DELETE', headers: authHeaders() });
+  toast('Team removed'); loadTeams();
+}
+
+// ── Admin ──────────────────────────────────────
+async function addTournament() {
+  const name  = document.getElementById('a-name').value.trim();
+  const game  = document.getElementById('a-game').value;
+  const date  = document.getElementById('a-date').value.trim();
+  const prize = document.getElementById('a-prize').value.trim() || 'TBD';
+  const max   = parseInt(document.getElementById('a-max').value) || 16;
+  if (!name || !date) { toast('Name and date are required', true); return; }
+  try {
+    const res = await fetch(API + '/tournaments', {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ name, game, date, prizePool: prize, maxTeams: max })
+    });
+    if (!res.ok) throw 0;
+    toast('✅ Tournament created!');
+    document.getElementById('a-name').value = '';
+    document.getElementById('a-date').value = '';
+    document.getElementById('a-prize').value = '';
+    loadAdminList();
+  } catch { toast('Failed to create tournament', true); }
+}
+
+async function loadAdminList() {
+  const el = document.getElementById('admin-tour-list');
+  try {
+    const tours = await fetch(API + '/tournaments').then(r => r.json());
+    if (!tours.length) { el.innerHTML = '<div class="empty">No tournaments</div>'; return; }
+    el.innerHTML = tours.map(t => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:600;font-size:.88rem">${t.name}</div>
+          <div style="font-size:.73rem;color:var(--muted)">${t.game} · ${t.date} · <span class="badge ${t.status}">${t.status}</span></div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteTournament('${t._id}')">Delete</button>
+      </div>`).join('');
+  } catch { el.innerHTML = '<div class="empty">⚠️ Error</div>'; }
+}
+
+async function deleteTournament(id) {
+  if (!confirm('Delete tournament and all its teams?')) return;
+  await fetch(API + '/tournaments/' + id, { method: 'DELETE', headers: authHeaders() });
+  toast('Tournament deleted'); loadAdminList();
+}
+
+// ── Enter key support ──────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('form-login').classList.contains('active')) doLogin();
+    else if (document.getElementById('form-register').classList.contains('active')) doRegister();
+  }
+});
+
+// ── Init ───────────────────────────────────────
+checkConn();
+checkExistingToken().then(() => loadDashboard());
+setInterval(checkConn, 10000);
+</script>
+</body>
+</html>

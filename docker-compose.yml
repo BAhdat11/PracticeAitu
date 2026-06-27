@@ -1,0 +1,43 @@
+services:
+
+  mongo:
+    image: mongo:6
+    container_name: esports_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - esports_net
+
+  backend:
+    build: ./backend
+    container_name: esports_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/esports
+    depends_on:
+      - mongo
+    networks:
+      - esports_net
+
+  bot:
+    build: ./bot
+    container_name: esports_bot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN:-placeholder}
+      - MONGO_URI=mongodb://mongo:27017/esports
+    depends_on:
+      - mongo
+    networks:
+      - esports_net
+
+volumes:
+  mongo_data:
+
+networks:
+  esports_net:
+    driver: bridge
